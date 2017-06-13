@@ -1,0 +1,173 @@
+
+---------------------------------------------------
+-- SET ALIASES
+---------------------------------------------------
+
+alias jmsdelQ='<path-to-app>/jms-utils.sh delete_from_queue'
+alias jmsgetQ='<path-to-app>/jms-utils.sh get_from_queue'
+alias jmssendQ='<path-to-app>/jms-utils.sh send_to_queue'
+alias jmsdelD='<path-to-app>/jms-utils.sh delete_from_durable'
+alias jmsgetD='<path-to-app>/jms-utils.sh get_from_durable'
+alias jmssendT='<path-to-app>/jms-utils.sh send_to_topic'
+
+
+
+---------------------------------------------------
+-- DELETE FROM QUEUE
+---------------------------------------------------
+
+Usage:
+jmsdelQ <destination> <deleteMode or datePattern> <saveFileName> <jmsUser> <jmsPassword>
+
+* destination - queue name
+* deleteMode or datePattern - ALL or BY_IDS or (\\d+)D(\\d\\d)H(\\d\\d)M or SimpleDateFormat yyyyMMdd_HHmmss
+* saveFileName - destination to save deleted messages info
+* jmsUser - user to connect to JMS
+* jmsPassword - user password; may be encrypted, then starts with {DES}
+
+
+-- delete all messages
+jmsdelQ yweiss.test1 ALL tmp/111.txt user2 password
+
+-- delete older than date ( SimpleDateFormat("yyyyMMdd_HHmmss") )
+jmsdelQ yweiss.test1 20170607_111400 tmp/111.txt user2 password
+
+-- delete older than time shift from now ( Pattern.compile("(\\d+)D(\\d\\d)H(\\d\\d)M") )
+jmsdelQ yweiss.test1 0D00H15M tmp/111.txt user2 password
+
+-- delete by IDs list from pipe
+echo "ID:my-server-14825-1496834019041-1:7:1:1:1" | jmsdelQ yweiss.test1 BY_IDS tmp/111.txt user2 password
+
+cat tmp/toDelete.txt | jmsdelQ yweiss.test1 BY_IDS tmp/111.txt user2 password
+
+
+
+---------------------------------------------------
+-- GET FROM QUEUE
+---------------------------------------------------
+
+Usage:
+jmsgetQ <destination> <getMode or datePattern> <saveFileName> <jmsUser> <jmsPassword>
+
+* destination - queue name
+* getMode or datePattern - ALL or (\\d+)D(\\d\\d)H(\\d\\d)M or SimpleDateFormat yyyyMMdd_HHmmss
+* saveFileName - destination to save deleted messages info
+* jmsUser - user to connect to JMS
+* jmsPassword - user password; may be encrypted, then starts with {DES}
+
+-- load all messages
+jmsgetQ yweiss.test1 ALL tmp/111.txt user2 password
+
+-- load messages older than time shift from now ( Pattern.compile("(\\d+)D(\\d\\d)H(\\d\\d)M") )
+jmsgetQ yweiss.test1 0D00H15M tmp/111.txt user2 password
+
+-- load older than date ( SimpleDateFormat("yyyyMMdd_HHmmss") )
+jmsgetQ yweiss.test1 20170610_062200 tmp/111.txt user2 password
+
+
+
+---------------------------------------------------
+-- SEND TO QUEUE
+---------------------------------------------------
+
+Usage:
+jmssendQ <destination> <sendMode> <fileType> <fileName> <delay> <jmsUser> <jmsPassword>
+
+* destination - queue name
+* sendMode - ALL or BY_IDS (BY_IDS only for BIN file)
+* fileType - BIN for .dat file saved by get or delete command, TXT for handmade raw text file with <!-- MESSAGE SEPARATOR --> separators
+* fileName - file with messages to send
+* delay - delay between each message sending, milliseconds
+* jmsUser - user to connect to JMS
+* jmsPassword - user password; may be encrypted, then starts with {DES}
+
+-- send all messages from .dat file into queue (100 - deleay between messages)
+jmssendQ yweiss.test1 ALL BIN tmp/111.txt.dat 100 user2 password
+jmssendQ yweiss.test1 ALL BIN tmp/_old.txt.dat 20 user2 password
+
+-- send by IDs list from pipe using messages from .dat file
+cat tmp/toSend.txt | jmssendQ yweiss.test1 BY_IDS BIN tmp/111.txt.dat 100 user2 password
+
+-- !!! from TXT file usage of BY_IDS mode is impossible, as there are only message payloads
+-- send all messages from text file into queue
+-- messages separator in file: <!-- MESSAGE SEPARATOR -->
+jmssendQ yweiss.test1 ALL TXT tmp/handmadeMessages.txt 100 user2 password
+
+
+
+---------------------------------------------------
+-- DELETE FROM DURABLE
+---------------------------------------------------
+
+Usage:
+jmsdelD <destination> <durableName> <deleteMode or datePattern> <saveFileName> <jmsUser> <jmsPassword>
+
+* destination - topic name
+* durableName - durable name
+* deleteMode or datePattern - ALL or (\\d+)D(\\d\\d)H(\\d\\d)M or SimpleDateFormat yyyyMMdd_HHmmss
+* saveFileName - destination to save deleted messages info
+* jmsUser - user to connect to JMS
+* jmsPassword - user password; may be encrypted, then starts with {DES}
+
+-- delete all
+jmsdelD yweiss.testDurable jms-utils-subs ALL tmp/111.txt user2 password
+
+-- delete older than date ( SimpleDateFormat("yyyyMMdd_HHmmss") )
+jmsdelD yweiss.testDurable jms-utils-subs 20170610_071114 tmp/111.txt user2 password
+
+-- delete older than time shift from now ( Pattern.compile("(\\d+)D(\\d\\d)H(\\d\\d)M") )
+jmsdelD yweiss.testDurable jms-utils-subs 1D00H00M tmp/111.txt user2 password
+
+
+
+---------------------------------------------------
+-- GET FROM DURABLE
+---------------------------------------------------
+
+Usage:
+jmsgetD <destination> <durableName> <loadMode or datePattern> <saveFileName> <jmsUser> <jmsPassword>
+
+* destination - topic name
+* durableName - durable name
+* loadMode or datePattern - ALL or (\\d+)D(\\d\\d)H(\\d\\d)M or SimpleDateFormat yyyyMMdd_HHmmss
+* saveFileName - destination to save loaded messages info
+* jmsUser - user to connect to JMS
+* jmsPassword - user password; may be encrypted, then starts with {DES}
+
+-- load all
+jmsgetD yweiss.testDurable jms-utils-subs ALL tmp/111.txt user2 password
+
+-- load older than date ( SimpleDateFormat("yyyyMMdd_HHmmss") )
+jmsgetD yweiss.testDurable jms-utils-subs 20170610_071114 tmp/111.txt user2 password
+
+-- load older than time shift from now ( Pattern.compile("(\\d+)D(\\d\\d)H(\\d\\d)M") )
+jmsgetD yweiss.testDurable jms-utils-subs 1D00H00M tmp/111.txt user2 password
+
+
+
+---------------------------------------------------
+-- SEND TO TOPIC
+---------------------------------------------------
+
+Usage:
+jmssendT <destination> <sendMode> <fileType> <fileName> <delay> <jmsUser> <jmsPassword>
+
+* destination - topic name
+* sendMode - ALL or BY_IDS (BY_IDS only for BIN file)
+* fileType - BIN for .dat file saved by get or delete command, TXT for handmade raw text file with <!-- MESSAGE SEPARATOR --> separators
+* fileName - file with messages to send
+* delay - delay between each message sending, milliseconds
+* jmsUser - user to connect to JMS
+* jmsPassword - user password; may be encrypted, then starts with {DES}
+
+-- send all messages from .dat file into queue (100 - deleay between messages)
+jmssendT yweiss.testDurable ALL BIN tmp/111.txt.dat 100 user2 password
+jmssendT yweiss.testDurable ALL BIN tmp/_old.txt.dat 500 user2 password
+
+-- send by IDs list from pipe using messages from .dat file
+cat tmp/toSend.txt | jmssendT yweiss.testDurable BY_IDS BIN tmp/111.txt.dat 100 user2 password
+
+-- !!! from TXT file usage of BY_IDS mode is impossible, as there are only message payloads
+-- send all messages from text file into queue
+-- messages separator in file: <!-- MESSAGE SEPARATOR -->
+jmssendT yweiss.testDurable ALL TXT tmp/handmadeMessages.txt 100 user2 password
